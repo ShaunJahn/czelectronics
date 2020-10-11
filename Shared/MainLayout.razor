@@ -1,0 +1,29 @@
+﻿@inherits LayoutComponentBase
+@*<div class="sidebar">
+        <NavMenu />
+    </div>*@
+
+<div class="main">
+    <div style="z-index: 99;" class="top-row px-4 auth">
+        <LoginDisplay />
+        @*<a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>*@
+    </div>
+
+    <div class="content px-4">
+        <MatThemeProvider Theme="@theme2">
+            <MatToastContainer />
+            @Body
+        </MatThemeProvider>
+    </div>
+</div>
+
+@code
+        {
+
+    MatTheme theme2 = new MatTheme()
+    {
+        Primary = "#b71c1c",
+        Secondary = "#b71c1c"
+    };
+
+}

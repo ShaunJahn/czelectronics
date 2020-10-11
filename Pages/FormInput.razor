@@ -1,0 +1,121 @@
+﻿@page "/Form"
+
+@inject IStatuses StatusesService
+@inject ICustomers CustomerService
+@inject IStoreCodes StoreCodesService
+@inject IForm FormService
+@attribute [Authorize(Roles = "User")]
+@inject IMatToaster Toaster
+
+<div class="container">
+    <img src="../Images/CZ Logo.png" />
+    <br />
+    <label>RMA number from CZ Electronics (Pty) Ltd</label>
+    <br />
+    <h3>RMA @nextFormId</h3>
+    <br />
+    <label>Store Code</label>
+    <br />
+    <select class="form-control selectpicker" @bind="FormUserInput.StoreCodeId">
+        <option selected>--select--</option>
+        @foreach (var item in StoreCodes)
+        {
+            <option value="@item.StoreCodeId">@item.Code</option>
+        }
+    </select>
+    <label>Customer</label>
+    <br />
+    <select class="form-control selectpicker" @bind="FormUserInput.CustomerId">
+        <option selected>--select--</option>
+        @foreach (var item in Customers)
+        {
+            <option value="@item.CustomerId">@item.Name</option>
+        }
+    </select>
+    <br />
+    <label>Contact Person in Store</label>
+    <br />
+    <MatTextField @bind-Value="FormUserInput.ContactName"></MatTextField>
+    <br />
+    <label>
+        Contact Number for in Store person
+    </label>
+    <br />
+    <MatTextField @bind-Value="FormUserInput.ContactNumber"></MatTextField>
+    <br />
+
+    <MatSlideToggle TValue="bool" Label="Has the Customers discussed the faults with the Call Centre?" ValueChanged="@(e=>HasDiscussedFaults(e))"></MatSlideToggle>
+    <br />
+
+    <MatSlideToggle TValue="bool" Label="Has the warranty been verified as per the purchase date on the till slip?" ValueChanged="@(e=>HasWarrantyVerified(e))"></MatSlideToggle>
+    <br />
+    <label>
+        Quantity of Units
+    </label>
+    <br />
+    <MatTextField @bind-Value="@quantityAmount" Discrete="true" Pin="true" TValue="int" ValueMin="0" ValueMax="10"></MatTextField>
+
+    @for (int i = 1; i < quantityAmount + 1; i++)
+    {
+        <h1>Product : @i</h1>
+        <ProductSelection ProductTypeId="nextFormId" @bind-Products="products"></ProductSelection>
+    }
+
+    <MatButton Outlined="true" @onclick="Save">Save</MatButton>
+</div>
+@code
+{
+    [Inject]
+    protected IMatToaster Toasters { get; set; }
+
+    public List<Status> Statuses { get; set; } = new List<Status>();
+    public List<Customer> Customers { get; set; } = new List<Customer>();
+    public List<StoreCode> StoreCodes { get; set; } = new List<StoreCode>();
+
+    public List<ProductType> ProductTypes { get; set; } = new List<ProductType>();
+
+    FormUserInput FormUserInput = new FormUserInput();
+    int quantityAmount = 0;
+    int nextFormId = 0; // Come back
+    List<Product> products = new List<Product>();
+
+    protected override void OnInitialized()
+    {
+        Statuses = StatusesService.GetStatuses();
+        Customers = CustomerService.GetCustomers();
+        StoreCodes = StoreCodesService.GetStoreCodes();
+        GetNextFormId();
+        StateHasChanged();
+    }
+
+    private void HasDiscussedFaults(bool toggled)
+    {
+        FormUserInput.DiscussedFaults = toggled;
+    }
+
+    private void HasWarrantyVerified(bool toggled)
+    {
+        FormUserInput.WarrantyVerified = toggled;
+    }
+
+    private void GetNextFormId()
+    {
+        nextFormId = FormService.GetNextFormId();
+    }
+
+    private void Save()
+    {
+        FormUserInput.ProductsNavigation = products;
+        bool isSaved = FormService.Save(FormUserInput);
+        if (isSaved)
+        {
+            Toasters.Add("Saved Form", MatToastType.Success, null, null);
+        }
+        else
+        {
+            Toasters.Add("Error Saving Form", MatToastType.Danger, null, null);
+        }
+        OnInitialized();
+        products = new List<Product>();
+    }
+}

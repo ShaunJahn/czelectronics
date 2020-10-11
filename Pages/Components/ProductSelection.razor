@@ -1,0 +1,80 @@
+﻿@inject IProductsTypes ProductsTypesService
+@using czelectronics.Data.Models
+<label>
+    Product Type
+</label>
+<select class="form-control selectpicker" @bind="ProductInput.ProductTypeId">
+    <option>--select--</option>
+    @foreach (var item in ProductTypes)
+    {
+        <option value="@item.ProductTypeId">@item.Type</option>
+    }
+</select>
+<label>
+    Model Number
+</label>
+<br />
+<MatTextField @bind-Value="ProductInput.ModelNumber"></MatTextField>
+<br />
+<label>
+    Serial Number
+</label>
+<br />
+<MatTextField @bind-Value="ProductInput.SerialNumber"></MatTextField>
+<br />
+<label>
+    Fault Insp. by Store
+</label>
+<br />
+<MatTextField @bind-Value="ProductInput.FaultInspection"></MatTextField>
+<br />
+<label>
+    Explain Fault
+</label>
+<br />
+<MatTextField @bind-Value="ProductInput.FaultDescription"></MatTextField>
+<br />
+<label>
+    Article Number
+</label>
+<br />
+<MatTextField @bind-Value="ProductInput.ArticleNumber"></MatTextField>
+<br />
+
+<MatSlideToggle @bind-Value="@ProductInput.Accessories" Label="Accessories"></MatSlideToggle>
+<br />
+<MatSlideToggle @bind-Value="@ProductInput.Box" Label="Box"></MatSlideToggle>
+<br />
+<MatSlideToggle @bind-Value="@ProductInput.Remote" Label="Remote"></MatSlideToggle>
+<br />
+<MatSlideToggle @bind-Value="@ProductInput.Manual" Label="Manual"></MatSlideToggle>
+<br />
+
+<MatButton @onclick="UpdateList" Dense="true">Validate</MatButton>
+
+@code
+{
+    [Parameter]
+    public int ProductTypeId { get; set; }
+    [Parameter]
+    public List<Product> Products { get; set; }
+    [Parameter]
+    public EventCallback<List<Product>> ProductsChanged { get; set; }
+
+
+    public Product ProductInput { get; set; } = new Product();
+    public List<ProductType> ProductTypes { get; set; } = new List<ProductType>();
+
+    protected override void OnInitialized()
+    {
+        ProductTypes = ProductsTypesService.GetProductsTypes();
+        StateHasChanged();
+    }
+
+    async Task UpdateList()
+    {
+        Products.Add(ProductInput);
+        await ProductsChanged.InvokeAsync(Products);
+    }
+
+}

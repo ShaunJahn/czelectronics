@@ -1,0 +1,112 @@
+﻿@page "/ViewAll"
+
+@inject IForm FormService
+@inject IStatuses StatusesService
+@attribute [Authorize(Roles = "Admin,Courier")]
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Identity;
+@inject UserManager<IdentityUser> _UserManager
+@inject RoleManager<IdentityRole> _RoleManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavManager
+@inject IMatToaster Toaster
+
+<style>
+    .table a{
+        color:black !important;
+    }
+</style>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th scope="col">RMA Number</th>
+            <th scope="col">Store Name</th>
+            <th scope="col">Customer Name</th>
+            <th scope="col">Status</th>
+            <th scope="col">Store Code</th>
+            <th scope="col">Date Created</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var form in UserInputs)
+        {
+            <tr>
+                <td scope="row"> <a href="Details/@form.FormUserInputId">RMA @form.FormUserInputId</a></td>
+                <td>@form.StoreCode.Name</td>
+                <td>@form.Customer.Name</td>
+                <td>
+                    <select class="form-control selectpicker" @onchange="@((x) => updateStatus(x, form.FormUserInputId))">
+                        @foreach (var status in Statuses)
+                        {
+                            @if (form.StatusId == status.StatusId)
+                            {
+                                <option selected value="@status.StatusId">@status.Type</option>
+                            }
+                            else
+                            {
+                                <option value="@status.StatusId">@status.Type</option>
+                            }
+                        }
+                    </select>
+                </td>
+                <td>@form.StoreCode.Code</td>
+                <td>@form.DateCreated.ToLongDateString()</td>
+            </tr>
+        }
+
+    </tbody>
+</table>
+@code {
+    [Inject]
+    protected IMatToaster Toasters { get; set; }
+
+    public List<FormUserInput> UserInputs { get; set; }
+    public List<Status> Statuses { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    public bool isAdmin { get; set; } = false;
+
+    protected override void OnInitialized()
+    {
+        Setup();
+    }
+
+    void updateStatus(ChangeEventArgs e, int formId)
+    {
+        bool isSaved = FormService.UpdateFormStatudById(formId, Convert.ToInt32(e.Value));
+
+        if (isSaved)
+        {
+            Toasters.Add("Updated", MatToastType.Success, null, null);
+        }
+        else
+        {
+            Toasters.Add("Error Updating", MatToastType.Danger, null, null);
+        }
+        Setup();
+    }
+
+    private async void Setup()
+    {
+        var authState = await authenticationStateTask;
+        var user = authState.User;
+
+        if (user.IsInRole("Courier"))
+        {
+            isAdmin = false;
+            Statuses = StatusesService.GetStatuses();
+            Statuses = Statuses.Where(x => x.StatusId == 4 || x.StatusId == 5).ToList();
+            UserInputs = FormService.GetForms();
+            UserInputs = UserInputs.Where(x => x.Status.StatusId != 1 & x.Status.StatusId != 3).ToList();
+        }
+        else if (user.IsInRole("Admin"))
+        {
+            isAdmin = true;
+            Statuses = StatusesService.GetStatuses();
+            UserInputs = FormService.GetForms();
+        }
+        StateHasChanged();
+    }
+}

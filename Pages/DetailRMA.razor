@@ -1,0 +1,92 @@
+﻿@page "/Details/{RmaId}"
+@inject IForm FormService
+@attribute [Authorize(Roles = "Admin,Courier")]
+<div class="form-group">
+    <label>Store Name: </label>
+    <input disabled class="form-control" @bind-value="FormInfo.StoreCode.Name">
+</div>
+
+<div class="form-group">
+    <label>Store  Name: </label>
+    <input disabled class="form-control" @bind-value="FormInfo.StoreCode.Code">
+</div>
+
+<div class="form-group">
+    <label>Store Address: </label>
+    <input disabled class="form-control" @bind-value="FormInfo.StoreCode.Address">
+</div>
+
+<div class="form-group">
+    <label>Customer: </label>
+    <input disabled class="form-control" @bind-value="FormInfo.Customer.Name">
+</div>
+
+<div class="form-group">
+    <label>Status: </label>
+    <input disabled class="form-control" @bind-value="FormInfo.Status.Type">
+</div>
+
+<div class="form-group">
+    <label>Contact Person in Store: </label>
+    <input disabled class="form-control" @bind-value="FormInfo.ContactName">
+</div>
+
+<div class="form-group">
+    <label>Contact Number: </label>
+    <input disabled class="form-control" @bind-value="FormInfo.ContactNumber">
+</div>
+
+<div class="form-group">
+    <label>Quantity of Units: </label>
+    <input disabled class="form-control" value="@FormInfo.ProductsNavigation.Count">
+</div>
+
+<div class="form-group">
+    <label>Has the Customers discussed the faults with the Call Centre? </label>
+    <input disabled class="form-control" value="@FormInfo.DiscussedFaults.ToString()">
+</div>
+
+<div class="form-group">
+    <label>Has the warranty been verified as per the purchase date on the till slip? </label>
+    <input disabled class="form-control" value="@FormInfo.WarrantyVerified.ToString()">
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th scope="col">Product Type</th>
+            <th scope="col">Model Number</th>
+            <th scope="col">Serial Number</th>
+            <th scope="col">Fault Insp. by Store</th>
+            <th scope="col">Explain Fault</th>
+            <th scope="col">Article Number</th>
+            <th scope="col">Includes</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var product in FormInfo.ProductsNavigation)
+        {
+            <tr>
+                <td>@product.ProductTypeNavigation.Type</td>
+                <td>@product.ModelNumber</td>
+                <td>@product.SerialNumber</td>
+                <td>@product.FaultInspection</td>
+                <td>@product.FaultDescription</td>
+                <td>@product.ArticleNumber</td>
+                <td>@*@product.Inc*@</td>
+            </tr>
+        }
+
+    </tbody>
+</table>
+
+@code
+{
+    [Parameter]
+    public string RmaId { get; set; }
+    public FormUserInput FormInfo { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        FormInfo = FormService.GetFormById(Convert.ToInt32(RmaId));
+    }
+}
